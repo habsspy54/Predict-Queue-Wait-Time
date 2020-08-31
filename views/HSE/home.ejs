@@ -1,0 +1,247 @@
+<%- include ('../partials/header') %>
+	
+<title>HSE - Home</title>
+<script src="../scripts/jsQR.js"></script>
+<link type="text/css" rel="stylesheet" href="/stylesheets/hse-home.css" />
+
+
+<div id="confirmation-modal">
+  <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Confirm Submission</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form action="/HSE/patient-registration" method="POST">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="stage_no" class="col-form-label">Stage:</label>
+              <input type="number" min="1" max="4" name="stage" class="form-control" id="stage_no" required>
+            </div>
+            <div class="form-group">
+              <label for="patient_id" class="col-form-label">Patient ID:</label>
+              <input type="text" name="pid" class="form-control" id="patient_id" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="confirmation-modal2">
+  <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Confirm Removal</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Are you sure to remove patient from queue?
+        </div>
+        <form action="/HSE/remove-patient-from-queue" method="POST">
+          <div class="modal-body">
+            <div class="d-none form-group">
+              <input type="text" name="pid" class="form-control" id="patient_id" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+            <button type="submit" class="btn btn-primary">Yes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="row">
+  <div class="second-container col col-lg-4">
+    <h3 class="list-head">Registered Patients List</h3>
+    <ul class="list-group">
+      <% var count=0 %>
+      <% regPatients.forEach(function(patient){ %>
+        <% if(patient.stage1.date != undefined){ %>
+          <% if(patient.stage1.date.getDate()==(new Date()).getDate() && patient.stage1.date.getMonth()==(new Date()).getMonth() && patient.stage1.date.getFullYear()==(new Date()).getFullYear()){ %>
+            <% count=count+1 %>
+            <% var token = (patient.token < 10)?'00'+patient.token:((patient.token < 100)?'0'+patient.token:patient.token) %>
+            <% if(patient.visit_type == 'appointment'){ %>
+              <% var token = "A" + token %>
+            <% }else if(patient.visit_type == 'emergency'){ %>
+              <% var token = "E" + token %>
+            <% }else{ %>
+              <% var token = "T" + token %>
+            <% } %>
+            <% if(patient.stage1.isInQueue==true){ %>
+              <li class="list-group-item"><%= token %> &nbsp;&nbsp;:&nbsp;&nbsp; <%= patient.name%></li>
+            <% }else{ %>
+              <li class="list-group-item disabled-item"><%= token %> &nbsp;&nbsp;:&nbsp;&nbsp; <%= patient.name%></li>
+            <% } %>
+          <% } %>
+        <% } %>
+      <% }); %>
+
+      <% if(count < 10){ %>
+        <% for(var i=10-count; i>0; i--){ %>
+          <li class="list-content list-group-item"></li>
+        <% } %>
+      <% } %>
+    </ul>
+    <br>
+    <h3 class="list-head">Doctor Consultation Queue</h3>
+    <ul id="consultation-ul" class="list-group">
+      <% var count=0 %>
+      <% regPatients.forEach(function(patient){ %>
+        <% if(patient.stage1.isGone==true && patient.stage2.inTime.isGone==false){ %>
+          <% count=count+1 %>
+          <% var token = (patient.token < 10)?'00'+patient.token:((patient.token < 100)?'0'+patient.token:patient.token) %>
+          <% if(patient.visit_type == 'appointment'){ %>
+            <% var token = "A" + token %>
+          <% }else{ %>
+            <% var token = "T" + token %>
+          <% } %>
+          <li class="li1 list-li list-group-item"><%= token %> &nbsp;&nbsp;:&nbsp;&nbsp; <%= patient.name %><span class="trash-btn"><i id=<%= patient._id %> onclick="getConfirmationModal2(this.id)" class="far fa-trash-alt"></i> </span></li>
+        <% } %>
+        <% if(patient.stage2.inTime.isGone==true && patient.stage2.outTime.isGone==false){ %>
+          <% count=count+1 %>
+          <% var token = (patient.token < 10)?'00'+patient.token:((patient.token < 100)?'0'+patient.token:patient.token) %>
+          <% if(patient.visit_type == 'appointment'){ %>
+            <% var token = "A" + token %>
+          <% }else if(patient.visit_type == 'emergency'){ %>
+            <% var token = "E" + token %>
+          <% }else{ %>
+            <% var token = "T" + token %>
+          <% } %>
+          <li class="li2 list-li active-list-item list-group-item"><span class="trash-btn"><i id=<%= patient._id %> onclick="getConfirmationModal2(this.id)" class="far fa-trash-alt"></i> </span><%= token %> &nbsp;&nbsp;:&nbsp;&nbsp; <%= patient.name %></li>
+        <% } %>
+      <% }); %>
+
+      <% if(count < 10){ %>
+        <% for(var i=10-count; i>0; i--){ %>
+          <li class="list-content list-group-item"></li>
+        <% } %>
+      <% } %>
+    </ul>
+  </div>
+  <div class="first-container col col-lg-4">
+    <div id="stage">
+      <span id="1" class="round active-tab">Stage 1</span>
+      <span id="2" class="round">Stage 2</span>
+      <span id="3" class="round">Stage 3</span>
+      <span id="4" class="round">Stage 4</span>
+    </div>
+    
+    <div id="select-way">
+      <select id="registration-option">
+        <option value="qr">Patient Registration using QR Code</option>
+        <option value="patient-id">Patient Registration using Patient ID</option>
+      </select>
+    </div>
+
+    <div id="qr-scanner">
+      <div id="loadingMessage">🎥 Unable to access video stream (Please make sure you have a webcam enabled)</div>
+      <canvas id="canvas" hidden></canvas>
+      <div id="output" hidden>
+        <div id="outputMessage">Output : No QR Code Detected...</div>
+        <div hidden><b>Output : </b> <span id="outputData"></span></div>
+      </div>
+    </div>
+      
+    <div class="d-none" id="patient-id">
+      <form>
+        <label class="intro" for="p_id">Enter Patient ID: </label>
+        <input id="p_id" type="text" placeholder="Patient ID" data-toggle="popover" data-placement="top" data-content="Please fill out this field" required>
+        <div class="text-center">
+          <button onclick="getConfirmationModal(document.getElementById('p_id').value)" class="btn btn-primary" type="button">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="third-container col col-lg-4">
+    <h3 class="list-head">Billing Counter Queue</h3>
+    <ul id="billing-ul" class="list-group">
+      <% var count=0 %>
+      <% regPatients.forEach(function(patient){ %>
+        <% if(patient.stage2.outTime.isGone==true && patient.stage3.isGone==false){ %>
+          <% count=count+1 %>
+          <% var token = (patient.token < 10)?'00'+patient.token:((patient.token < 100)?'0'+patient.token:patient.token) %>
+          <% if(patient.visit_type == 'appointment'){ %>
+            <% var token = "A" + token %>
+          <% }else if(patient.visit_type == 'emergency'){ %>
+            <% var token = "E" + token %>
+          <% }else{ %>
+            <% var token = "T" + token %>
+          <% } %>
+          <% if(patient.stage3.isActive==true){ %>
+            <li class="li1 list-li active-list-item list-group-item"><%= token %> &nbsp;&nbsp;:&nbsp;&nbsp; <%= patient.name %><span class="trash-btn"><i id=<%= patient._id %> onclick="getConfirmationModal2(this.id)" class="far fa-trash-alt"></i> </span></li>
+          <% }else{ %>
+            <li class="li2 list-li list-group-item"><%= token %> &nbsp;&nbsp;:&nbsp;&nbsp; <%= patient.name %><span class="trash-btn"><i id=<%= patient._id %> onclick="getConfirmationModal2(this.id)" class="far fa-trash-alt"></i> </span></li>
+            <% } %>
+        <% } %>
+      <% }); %>
+
+      <% if(count < 10){ %>
+        <% for(var i=10-count; i>0; i--){ %>
+          <li class="list-content list-group-item"></li>
+        <% } %>
+      <% } %>
+    </ul>
+    <br>
+    <h3 class="list-head">Medicine Counter Queue</h3>
+    <ul id="medicine-ul" class="list-group">
+      <% var count=0 %>
+      <% regPatients.forEach(function(patient){ %>
+        <% if(patient.stage3.isGone==true && patient.stage4.isGone==false){ %>
+          <% count=count+1 %>
+          <% var token = (patient.token < 10)?'00'+patient.token:((patient.token < 100)?'0'+patient.token:patient.token) %>
+          <% if(patient.visit_type == 'appointment'){ %>
+            <% var token = "A" + token %>
+          <% }else if(patient.visit_type == 'emergency'){ %>
+            <% var token = "E" + token %>
+          <% }else{ %>
+            <% var token = "T" + token %>
+          <% } %>
+          <% if(patient.stage4.isActive==true){ %>
+            <li class="li1 list-li active-list-item list-group-item"><%= token %> &nbsp;&nbsp;:&nbsp;&nbsp; <%= patient.name %><span class="trash-btn"><i id=<%= patient._id %> onclick="getConfirmationModal2(this.id)" class="far fa-trash-alt"></i> </span></li>
+          <% }else{ %>
+            <li class="li2 list-li list-group-item"><%= token %> &nbsp;&nbsp;:&nbsp;&nbsp; <%= patient.name %><span class="trash-btn"><i id=<%= patient._id %> onclick="getConfirmationModal2(this.id)" class="far fa-trash-alt"></i> </span></li>
+          <% } %>
+        <% } %>
+      <% }); %>
+
+      <% if(count < 10){ %>
+        <% for(var i=10-count; i>0; i--){ %>
+          <li class="list-content list-group-item"></li>
+        <% } %>
+      <% } %>
+    </ul>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<%- include ('../partials/footer') %>
+

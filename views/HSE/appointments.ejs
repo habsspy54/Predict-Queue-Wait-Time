@@ -1,0 +1,84 @@
+<%- include ('../partials/header') %>
+
+<title>Book Appointments</title>
+<link type="text/css" rel="stylesheet" href="/stylesheets/appointments.css" />
+
+<div class="row">
+    <div class="col-lg-6">
+        <div id="appointment-booking">
+            <h4 class="head">Book An Appointment : </h4>
+            <form action="/HSE/bookingconfirm" method="POST">
+                <label class="intro" for="p_id">Enter Patient ID: </label>
+                <input id="p_id" type="text" name="pid" placeholder="Patient ID" required>
+                <label class="intro" for="a_time">Time of Appointment: </label>
+                <input id="a_time" type="time" name="a_time" placeholder="Appointment Time" required>
+                <label class="intro" for="a_date">Date of Appointment: </label>
+                <input id="a_date" type="date" name="a_date" placeholder="Appointment Date" required>
+                <label class="intro" for="a_type">Type of Appointment: </label>
+                <select id="a_type" name="a_type">
+                    <option value=0>Consultation Appointment</option>
+                    <option value=1>Root Canal Appointment</option>
+                    <option value=2>Gum Sergery Appointment</option>
+                    <option value=3>Crowns and Caps Appointment</option>
+                    <option value=4>Braces Appointment</option>
+                </select>
+                <div class="text-center">
+                    <button class="btn btn-primary" type="submit">Book</button>
+                </div>
+            </form>
+            <% var aptTime = Date.now() + data.consultWait*1000 + data.mediWait*1000 + data.billWait*1000 %>
+            <% var aptTime = new Date(aptTime) %>
+            <% if(aptTime.getHours() < 22 && aptTime.getHours() >= 9){ %>
+                <div class="time-info">Today's Appointments are Available After : <%= aptTime.getHours() + ":" + aptTime.getMinutes() %></div>
+            <% }else{ %>
+                <div class="time-info">Appointment is not Available</div>
+            <% } %>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div id="curr_appointments_table">
+            <h4 class="head">Current Appointments : </h4>
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Token No</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Time</th>
+                        <th scope="col">Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% var count=0 %>
+                    <% appointments.forEach(function(appointment){ %>
+                        <% var token = (appointment.token < 10)?'00'+appointment.token:((appointment.token < 100)?'0'+appointment.token:appointment.token) %>
+                        <% var h = appointment.date.getHours() %>
+                        <% var m = appointment.date.getMinutes() %>
+                        <% var hh = (h < 10)?'0'+h:h %>
+                        <% var mm = (m < 10)?'0'+m:m %>
+                        <% var d = appointment.date.getDate() %>
+                        <% var month = appointment.date.getMonth()+1 %>
+                        <% var yy = appointment.date.getFullYear() %>
+                        <% var dd = (d < 10)?'0'+d:d %>
+                        <% var mmonth = (month < 10)?'0'+month:month %>
+                        <% count = count+1 %>
+                        <tr>
+                            <th scope="row"><%= count %></th>
+                            <td><%= "A"+token %></td>
+                            <td><%= appointment.name %></td>
+                            <td><%= dd+"-"+mmonth + "-" + yy %></td>
+                            <td><%= hh+":"+mm %></td>
+                            <td><%= appointment.type %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+
+<%- include ('../partials/footer') %>
